@@ -1,7 +1,6 @@
 import os
 import bs4
-#import _thread
-import threading
+from multiprocessing import Process, Lock
 from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
 
