@@ -1,5 +1,7 @@
 import os
 import bs4
+#import _thread
+import threading
 from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
 
@@ -63,6 +65,7 @@ def print_grand_prix(i,grand_prix):
     #organize paths for data printing
     path = atual_dir + '/' + str(i) + ' - ' + name
     create_dir(path)
+    threadLock.acquire()
     change_dir(path)
 
     gp_page = connection(grand_prix_url)
@@ -73,6 +76,7 @@ def print_grand_prix(i,grand_prix):
 
     print(name + ' ✓')
     change_dir('..')
+    threadLock.release()
     return
 
 def print_standings(name,table,driver):
@@ -143,5 +147,12 @@ print_standings(drivers_table_name,drivers_table,1)
 print_standings(teams_table_name,teams_table,0)
 
 #analize every race results
+threadList = []
+threadLock = threading.Lock()
 for i in range(1,len(year_races)):
-    print_grand_prix(i,year_races[i])
+    t = threading.Thread(target=print_grand_prix,args=(i,year_races[i]))
+    t.start()
+    threadList.append(t)
+
+for th in threadList:
+    th.join()
