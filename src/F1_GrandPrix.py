@@ -7,9 +7,6 @@ def connection(url):
     Con = uReq(url)
     page = Con.read()
     Con.close()
-    return page
-
-def parser(page):
     page_parsed = soup(page, "html.parser")
     return page_parsed
 
@@ -35,8 +32,7 @@ def print_race_results(race):
     name = race.find('a').text
 
     race_page = connection(race_url)
-    race_parsed = parser(race_page)
-    race_table = race_parsed.find("table", {"class":"resultsarchive-table"}).findAll('tr')
+    race_table = race_page.find("table", {"class":"resultsarchive-table"}).findAll('tr')
 
     #grab header
     header = race_table[0].findAll('th')
@@ -47,6 +43,7 @@ def print_race_results(race):
     #print header
     print_header(f,header)
 
+    #print table
     for i in range(1,len(race_table)):
         driver_table = race_table[i].findAll('td')
         for j in range(1,len(header)-1):
@@ -69,8 +66,7 @@ def print_grand_prix(i,grand_prix):
     change_dir(path)
 
     gp_page = connection(grand_prix_url)
-    gp_parsed = parser(gp_page)
-    grand_prix_results = gp_parsed.findAll("li", {"class":"side-nav-item"})
+    grand_prix_results = gp_page.findAll("li", {"class":"side-nav-item"})
 
     for i in range(1,len(grand_prix_results)):
         print_race_results(grand_prix_results[i])
@@ -79,23 +75,54 @@ def print_grand_prix(i,grand_prix):
     change_dir('..')
     return
 
+def print_standings(name,table,driver):
+    #grab header
+    header = table[0].findAll('th')
+
+    #open file
+    f = open(name + ".csv", "w")
+
+    #print header
+    print_header(f,header)
+
+    #print table
+    for i in range(1,len(table)):
+        element_table = table[i].findAll('td')
+        for j in range(1,len(header)-1):
+            if j == len(header)-2:
+                f.write(element_table[j].text.strip() + '\n')
+            elif (j==2 and driver==1):
+                f.write(element_table[j].find("span", {"class":"hide-for-tablet"}).text.strip() + ' ' + element_table[j].find("span", {"class":"hide-for-mobile"}).text.strip() + ',')
+            else:
+                f.write(element_table[j].text.strip() + ',')
+    f.close()
+    return
+
 year = input("Year: ")
 f1_results = 'https://www.formula1.com/en/results.html/' + year + '/races.html'
+drivers_url = 'https://www.formula1.com/en/results.html/' + year + '/drivers.html'
+teams_url = 'https://www.formula1.com/en/results.html/' + year + '/team.html'
 f1_site = 'https://www.formula1.com'
 
-#connections
-F1_page = connection(f1_results)
-
-#parse pages to html
-f1_parsed = parser(F1_page)
+#connections and parse pages to html
+f1_page = connection(f1_results)
+drivers_page = connection(drivers_url)
+teams_page = connection(teams_url)
 
 #grab all races
-f1_races = f1_parsed.findAll("ul", {"class":"resultsarchive-filter ResultFilterScrollable"})
+f1_races = f1_page.findAll("ul", {"class":"resultsarchive-filter ResultFilterScrollable"})
 
 if(len(f1_races) == 3):
     year_races = f1_races[2].findAll("li", {"class":"resultsarchive-filter-item"})
 else:
     exit(1)
+
+#grab drivers and teams standings table
+drivers_table = drivers_page.findAll("tr")
+drivers_table_name = drivers_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
+
+teams_table = teams_page.find("table", {"class":"resultsarchive-table"}).findAll('tr')
+teams_table_name = teams_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
 
 #organize paths for data printing
 change_dir('..')
@@ -109,6 +136,10 @@ atual_dir = os.getcwd()
 create_dir(atual_dir + '/' + year)
 change_dir(year)
 atual_dir = os.getcwd()
+
+#print standings
+print_standings(drivers_table_name,drivers_table,1)
+print_standings(teams_table_name,teams_table,0)
 
 #analize every race results
 for i in range(1,len(year_races)):

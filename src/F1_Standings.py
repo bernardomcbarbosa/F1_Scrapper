@@ -102,6 +102,6 @@ atual_dir = os.getcwd()
 create_dir(atual_dir + '/results')
 change_dir('results')
 
-#print drivers
+#print standings
 print_drivers_standings(drivers_parsed)
 print_teams_standings(teams_parsed)
