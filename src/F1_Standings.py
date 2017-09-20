@@ -100,7 +100,7 @@ create_dir(root_dir + '/data')
 change_dir('data')
 atual_dir = os.getcwd()
 create_dir(atual_dir + '/results')
-change_dir(atual_dir + '/results')
+change_dir('results')
 
 #print drivers
 print_drivers_standings(drivers_parsed)
