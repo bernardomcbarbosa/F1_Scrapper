@@ -96,6 +96,7 @@ def print_standings(name,table,driver):
             else:
                 f.write(element_table[j].text.strip() + ',')
     f.close()
+    print(name + ' ✓')
     return
 
 year = input("Year: ")
