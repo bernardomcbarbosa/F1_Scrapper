@@ -1,7 +1,6 @@
 import os
 import bs4
-#import _thread
-import threading
+from multiprocessing import Process
 from urllib.request import urlopen as uReq
 from bs4 import BeautifulSoup as soup
 
@@ -65,7 +64,6 @@ def print_grand_prix(i,grand_prix):
     #organize paths for data printing
     path = atual_dir + '/' + str(i) + ' - ' + name
     create_dir(path)
-    threadLock.acquire()
     change_dir(path)
 
     gp_page = connection(grand_prix_url)
@@ -75,8 +73,6 @@ def print_grand_prix(i,grand_prix):
         print_race_results(grand_prix_results[i])
 
     print(name + ' ✓')
-    change_dir('..')
-    threadLock.release()
     return
 
 def print_standings(name,table,driver):
@@ -122,13 +118,6 @@ if(len(f1_races) == 3):
 else:
     exit(1)
 
-#grab drivers and teams standings table
-drivers_table = drivers_page.findAll("tr")
-drivers_table_name = drivers_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
-
-teams_table = teams_page.find("table", {"class":"resultsarchive-table"}).findAll('tr')
-teams_table_name = teams_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
-
 #organize paths for data printing
 change_dir('..')
 root_dir = os.getcwd()
@@ -142,17 +131,16 @@ create_dir(atual_dir + '/' + year)
 change_dir(year)
 atual_dir = os.getcwd()
 
-#print standings
+#grab drivers and teams standings table
+drivers_table = drivers_page.findAll("tr")
+drivers_table_name = drivers_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
 print_standings(drivers_table_name,drivers_table,1)
-print_standings(teams_table_name,teams_table,0)
+
+if int(year) >= 1958:
+    teams_table = teams_page.find("table", {"class":"resultsarchive-table"}).findAll('tr')
+    teams_table_name = teams_page.find("h1", {"class":"ResultsArchiveTitle"}).text.strip()
+    print_standings(teams_table_name,teams_table,0)
 
 #analize every race results
-threadList = []
-threadLock = threading.Lock()
 for i in range(1,len(year_races)):
-    t = threading.Thread(target=print_grand_prix,args=(i,year_races[i]))
-    t.start()
-    threadList.append(t)
-
-for th in threadList:
-    th.join()
+    p = Process(target=print_grand_prix, args=(i,year_races[i])).start()
