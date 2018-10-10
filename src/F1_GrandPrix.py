@@ -1,14 +1,14 @@
 import os
 import bs4
 from multiprocessing import Process
-from urllib.request import urlopen as uReq
+import requests
 from bs4 import BeautifulSoup as soup
 
 def connection(url):
-    Con = uReq(url)
-    page = Con.read()
-    Con.close()
-    page_parsed = soup(page, "html.parser")
+    HEADER = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
+
+    response = requests.get(url, headers=HEADER, timeout=5)
+    page_parsed = soup(response.content, "html.parser")
     return page_parsed
 
 def change_dir(str):
@@ -143,4 +143,5 @@ if int(year) >= 1958:
 
 #analize every race results
 for i in range(1,len(year_races)):
+    # print_grand_prix(i,year_races[i])
     p = Process(target=print_grand_prix, args=(i,year_races[i])).start()
